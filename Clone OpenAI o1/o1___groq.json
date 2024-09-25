@@ -1,0 +1,833 @@
+{
+  "name": "o1 - groq",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "o1-teste_memory",
+        "options": {}
+      },
+      "id": "96774f47-cfe9-4a00-9bc3-90dd128c6c0b",
+      "name": "Get messages",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2700,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"system\",\n  \"content\": {{ JSON.stringify(`You are an expert AI assistant that explains your reasoning step by step. For each step, provide a title that describes what you're doing in that step, along with the content. Decide if you need another step or if you're ready to give the final answer. Respond in JSON format with 'title', 'content', and 'next_action' (either 'continue' or 'final_answer') keys. USE AS MANY REASONING STEPS AS POSSIBLE. AT LEAST 3. BE AWARE OF YOUR LIMITATIONS AS AN LLM AND WHAT YOU CAN AND CANNOT DO. IN YOUR REASONING, INCLUDE EXPLORATION OF ALTERNATIVE ANSWERS. CONSIDER YOU MAY BE WRONG, AND IF YOU ARE WRONG IN YOUR REASONING, WHERE IT WOULD BE. FULLY TEST ALL OTHER POSSIBILITIES. YOU CAN BE WRONG. WHEN YOU SAY YOU ARE RE-EXAMINING, ACTUALLY RE-EXAMINE, AND USE ANOTHER APPROACH TO DO SO. DO NOT JUST SAY YOU ARE RE-EXAMINING. USE AT LEAST 3 METHODS TO DERIVE THE ANSWER. USE BEST PRACTICES.\n\nExample of a valid JSON response:\n`+ '```' + `json\n{\n    \"title\": \"Identifying Key Information\",\n    \"content\": \"To begin solving this problem, we need to carefully examine the given information and identify the crucial elements that will guide our solution process. This involves...\",\n    \"next_action\": \"continue\"\n}`+ '```') }}\n}",
+        "options": {}
+      },
+      "id": "76fb24b7-64bc-4c02-b227-73f6f58af51e",
+      "name": "System message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd7f0919-35b6-44f4-81b7-a9b68fecc974",
+              "name": "role",
+              "value": "user",
+              "type": "string"
+            },
+            {
+              "id": "83e12f41-fc7c-4cbd-943c-c0ab4b7b6d20",
+              "name": "content",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f4858064-7c28-43e3-b088-0afbaf295bce",
+      "name": "User message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1380,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($('User message').item.json) }}",
+        "tail": true
+      },
+      "id": "92019fc2-21eb-4588-941f-110a4b64eba7",
+      "name": "Push User message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"assistant\",\n  \"content\": {{ JSON.stringify(`Thank you! I will now think step by step following my instructions, starting at the beginning after decomposing the problem.`) }}\n}",
+        "options": {}
+      },
+      "id": "20a463b1-8c12-461e-8169-3a9e2df1672b",
+      "name": "Assistant Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2260,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "c064fcff-a190-46e0-a23f-dffc9f6fea4c",
+      "name": "Push Assistant message 2",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "fe0023ab-8d0d-4021-9040-3a92c48a809f",
+      "name": "Push Assistant Step message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3800,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a8c97ada-7546-48b1-bfb8-2fe0bf4292d3",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 25,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "20349e59-156a-4cd8-a295-e5d55e60d9ab",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4300,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"role\": \"user\", \n  \"content\": \"Please provide the final answer based solely on your reasoning above. Do not use JSON formatting. Only provide the text response without any titles or preambles. Retain any formatting as instructed by the original prompt, such as exact formatting for free response or multiple choice.\"\n}\n",
+        "options": {}
+      },
+      "id": "c1cffe83-2033-4f98-bdfb-b3cf66602497",
+      "name": "Request Final Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4300,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "526278eb-26ae-4fec-82be-c9ae63f78b45",
+      "name": "Push User Final Answer message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4520,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "o1-teste_memory"
+      },
+      "id": "e953ad37-90b4-4ea1-89cf-0f6a777550cd",
+      "name": "Reset memory",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5600,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fe20626-017d-4655-8676-65f4217cda3c",
+              "name": "answer",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2564518f-aef2-403e-910e-6fe132c3b3f2",
+      "name": "Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5400,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"assistant\",\n  \"content\": {{ JSON.stringify($('Groq OpenAI').item.json.choices[0].message.content) }}\n} ",
+        "options": {}
+      },
+      "id": "d516a895-3540-498e-8a6b-059feb1a804f",
+      "name": "Assistant Step",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3580,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a10706be-8775-4c6e-b228-2e8fd48e819d",
+              "name": "messages",
+              "value": "={{ $json.messages.map(obj => JSON.parse(obj)) }}",
+              "type": "array"
+            },
+            {
+              "id": "18589abd-12f2-4076-bac7-df79cbce4e31",
+              "name": "model",
+              "value": "llama-3.1-70b-versatile",
+              "type": "string"
+            },
+            {
+              "id": "c38601b1-0ff1-42e6-8b92-e09575446c9b",
+              "name": "temperature",
+              "value": 0.2,
+              "type": "number"
+            },
+            {
+              "id": "3d8a5c68-35f8-41fc-9056-d128145f0ff7",
+              "name": "max_tokens",
+              "value": 300,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7c297c09-a606-44e3-912b-c232ce4f223e",
+      "name": "Final Request Body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4960,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "o1-teste_memory",
+        "options": {}
+      },
+      "id": "c08efdbb-4a45-4fa5-b3b3-696a744032d8",
+      "name": "Get final messages",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4740,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "334fd1d8-bc86-44d6-bab1-2ffd33fec8a2",
+      "name": "Groq OpenAI 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5180,
+        440
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MyX2NO8qUdGyIYiW",
+          "name": "Groq Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "94a541dc-1340-457b-9c80-28ca5d5d40fd",
+      "name": "Groq OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3140,
+        600
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MyX2NO8qUdGyIYiW",
+          "name": "Groq Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a10706be-8775-4c6e-b228-2e8fd48e819d",
+              "name": "messages",
+              "value": "={{ $('Get messages').item.json.messages.map( strObj => JSON.parse(strObj)) }}",
+              "type": "array"
+            },
+            {
+              "id": "bd0cb625-cc17-48b7-bad7-7d48bc610a98",
+              "name": "model",
+              "value": "llama-3.1-70b-versatile",
+              "type": "string"
+            },
+            {
+              "id": "20533a0a-cdb4-4914-943f-c0685662c9dd",
+              "name": "temperature",
+              "value": 0.2,
+              "type": "number"
+            },
+            {
+              "id": "4cca8849-cb61-43f6-80b2-85ceebea533a",
+              "name": "max_tokens",
+              "value": 300,
+              "type": "number"
+            },
+            {
+              "id": "68cc0583-33a2-4d9a-ac6e-870e114218a9",
+              "name": "response_format.type",
+              "value": "json_object",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "30f700cf-c206-49ee-97a0-ab32d13bc4f4",
+      "name": "Request body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2920,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.choices[0].message.content) }}",
+        "options": {}
+      },
+      "id": "24dcc5af-6aaf-4438-b07a-8e4cc80282df",
+      "name": "Parse",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f556110e-2fa6-49d0-935f-953db1c3e489",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        600
+      ],
+      "webhookId": "6050366d-976c-4cf3-b178-bc30bf3867b8"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "2d8d8bbf-0da7-42b7-82e6-a2f1af0fea5b",
+      "name": "Push System message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "b1f0094a-8075-4c68-8b96-30a946917352",
+                    "leftValue": "={{ $('Parse').item.json.next_action }}",
+                    "rightValue": "final_answer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "final_answer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Parse').item.json.next_action }}",
+                    "rightValue": "continue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4172b592-65b7-414f-97a1-cbece39a5853",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        4020,
+        600
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get messages": {
+      "main": [
+        [
+          {
+            "node": "Request body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System message": {
+      "main": [
+        [
+          {
+            "node": "Push System message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User message": {
+      "main": [
+        [
+          {
+            "node": "System message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push User message": {
+      "main": [
+        [
+          {
+            "node": "Assistant Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistant Message": {
+      "main": [
+        [
+          {
+            "node": "Push Assistant message 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Assistant message 2": {
+      "main": [
+        [
+          {
+            "node": "Get messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Assistant Step message": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Request Final Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Final Answer": {
+      "main": [
+        [
+          {
+            "node": "Push User Final Answer message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push User Final Answer message": {
+      "main": [
+        [
+          {
+            "node": "Get final messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer": {
+      "main": [
+        [
+          {
+            "node": "Reset memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistant Step": {
+      "main": [
+        [
+          {
+            "node": "Push Assistant Step message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Request Body": {
+      "main": [
+        [
+          {
+            "node": "Groq OpenAI 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get final messages": {
+      "main": [
+        [
+          {
+            "node": "Final Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq OpenAI 2": {
+      "main": [
+        [
+          {
+            "node": "Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request body": {
+      "main": [
+        [
+          {
+            "node": "Groq OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Assistant Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "User message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push System message": {
+      "main": [
+        [
+          {
+            "node": "Push User message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Request Final Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5a2b2f41-bc0f-45ea-83ff-b75df00cb449",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ad20c637f548d7b1e09cbae0383c6644aca87b4f0fe8deda2de937f77c2be79"
+  },
+  "id": "Nao5qJQkhOqJFkL3",
+  "tags": []
+}

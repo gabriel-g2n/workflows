@@ -1,0 +1,980 @@
+{
+  "name": "o1 - mini",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf9374ef-7269-4455-b32d-43e34d993f4f",
+              "name": "response_format.type",
+              "value": "json_schema",
+              "type": "string"
+            },
+            {
+              "id": "28a95f27-27e0-4bc0-abae-60a05dc8bb4d",
+              "name": "response_format.json_schema.name",
+              "value": "instructions_final_answer",
+              "type": "string"
+            },
+            {
+              "id": "cbf998ef-fd0d-425a-85bd-ada90c198433",
+              "name": "response_format.json_schema.schema",
+              "value": "{\n  \"title\": \"Step Answer Instructions\",\n  \"description\": \"All steps should use this json_schema\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"title\": {\n      \"type\": \"string\",\n      \"description\": \"Title that describes what is being done in this step.\"\n    },\n    \"content\": {\n      \"type\": \"string\",\n      \"description\": \"Detailed reasoning for the step.\"\n    },\n    \"next_action\": {\n      \"type\": \"string\",\n      \"description\": \"Decide if you need another step or if you are ready to give the final answer.\",\n      \"enum\": [\"continue\", \"final_answer\"]\n    }\n  },\n  \"required\": [\n    \"title\",\n    \"content\",\n    \"next_action\"\n  ],\n  \"additionalProperties\": false\n}\n",
+              "type": "object"
+            },
+            {
+              "id": "c5d1082a-42df-4cd7-8662-af2bd1f1930d",
+              "name": "response_format.json_schema.strict",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "db2a2d5d-dfb8-47a9-9af9-f2d69db424a7",
+      "name": "responseFormat",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2420,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4c7b4a94-c342-4143-8950-c845e0fd2d48",
+              "name": "model",
+              "value": "gpt-4o-mini",
+              "type": "string"
+            },
+            {
+              "id": "212d0615-a169-4e5e-87d1-a22959016f86",
+              "name": "temperature",
+              "value": 0.2,
+              "type": "number"
+            },
+            {
+              "id": "9819b06f-9a2f-4d6e-9954-9f1a878dbee4",
+              "name": "max_tokens",
+              "value": 300,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f89bb5a7-86ef-4021-aa10-37d0bdc19b33",
+      "name": "model",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2420,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.parse($json.choices[0].message.content) }}",
+        "options": {}
+      },
+      "id": "a9346b60-dc6e-427c-aeed-fa116e77d170",
+      "name": "Parse",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3140,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "o1-teste_memory",
+        "options": {}
+      },
+      "id": "bedaa838-59ea-4dc0-bda5-b909d2ca8866",
+      "name": "Get messages",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2140,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"system\",\n  \"content\": {{ JSON.stringify(`You are an expert AI assistant that explains your reasoning step by step. For each step, provide a title that describes what you're doing in that step, along with the content. Decide if you need another step or if you're ready to give the final answer. Respond in JSON format with 'title', 'content', and 'next_action' (either 'continue' or 'final_answer') keys. USE AS MANY REASONING STEPS AS POSSIBLE. AT LEAST 3. BE AWARE OF YOUR LIMITATIONS AS AN LLM AND WHAT YOU CAN AND CANNOT DO. IN YOUR REASONING, INCLUDE EXPLORATION OF ALTERNATIVE ANSWERS. CONSIDER YOU MAY BE WRONG, AND IF YOU ARE WRONG IN YOUR REASONING, WHERE IT WOULD BE. FULLY TEST ALL OTHER POSSIBILITIES. YOU CAN BE WRONG. WHEN YOU SAY YOU ARE RE-EXAMINING, ACTUALLY RE-EXAMINE, AND USE ANOTHER APPROACH TO DO SO. DO NOT JUST SAY YOU ARE RE-EXAMINING. USE AT LEAST 3 METHODS TO DERIVE THE ANSWER. USE BEST PRACTICES.\n\nExample of a valid JSON response:\n`+ '```' + `json\n{\n    \"title\": \"Identifying Key Information\",\n    \"content\": \"To begin solving this problem, we need to carefully examine the given information and identify the crucial elements that will guide our solution process. This involves...\",\n    \"next_action\": \"continue\"\n}`+ '```') }}\n}",
+        "options": {}
+      },
+      "id": "35509565-270f-4d18-bc01-57354b8e48be",
+      "name": "System message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dd7f0919-35b6-44f4-81b7-a9b68fecc974",
+              "name": "role",
+              "value": "user",
+              "type": "string"
+            },
+            {
+              "id": "83e12f41-fc7c-4cbd-943c-c0ab4b7b6d20",
+              "name": "content",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bd553d11-2d2d-4509-bd44-451c6dd407e6",
+      "name": "User message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($('User message').item.json) }}",
+        "tail": true
+      },
+      "id": "daca5b3a-0876-4052-a134-3f6c434d2089",
+      "name": "Push User message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db5cfe0a-7f43-4a61-8b27-bfd3a95deb8d",
+              "name": "chatInput",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "55b179d7-7e6a-43d6-9285-84c9363d520e",
+      "name": "chatInput",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        580,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a10706be-8775-4c6e-b228-2e8fd48e819d",
+              "name": "messages",
+              "value": "={{ $('Get messages').item.json.messages.map(obj => JSON.parse(obj)) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b5f10b29-84dc-4932-aeb5-30a3f072760d",
+      "name": "messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2420,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "e6fa5f8b-8bed-4913-a4c8-a4a5f6cb574b",
+      "name": "OpenAI1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2920,
+        600
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9Yk60HcVSVgLxdSJ",
+          "name": "OpenAI Header Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "4434d06a-bd7e-4540-8c58-2f0573381981",
+      "name": "Push Assistant message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combineBySql",
+        "numberInputs": 3,
+        "query": "SELECT * FROM input1, input2, input3"
+      },
+      "id": "58f461b7-586a-4938-b165-bf29885d0361",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2680,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"assistant\",\n  \"content\": {{ JSON.stringify(`Thank you! I will now think step by step following my instructions, starting at the beginning after decomposing the problem.`) }}\n}",
+        "options": {}
+      },
+      "id": "fd2b8489-5782-4d7d-8a77-8e387d0f8c59",
+      "name": "Assistant Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1700,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "52e13bda-4323-4b8b-b3ab-bd36e2eea018",
+      "name": "Push Assistant message 2",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"role\": \"assistant\",\n  \"content\": {{ JSON.stringify(`Title: ${$json.title} \\n\\n\nContent: ${$json.content} \\n\\n\nNext Action: ${$json.next_action} \\n\\n`) }}\n}",
+        "options": {}
+      },
+      "id": "d28b05c5-6084-4b96-a88f-b3231af5735e",
+      "name": "Assistant Step",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "2bd0d371-c6d6-4c84-9703-acd2227f589b",
+      "name": "Push Assistant Step message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        600
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a8c97ada-7546-48b1-bfb8-2fe0bf4292d3",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 25,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6f6f450e-3d9c-4910-9709-e8c4b5a98a20",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"role\": \"user\", \n  \"content\": \"Please provide the final answer based solely on your reasoning above. Do not use JSON formatting. Only provide the text response without any titles or preambles. Retain any formatting as instructed by the original prompt, such as exact formatting for free response or multiple choice.\"\n}\n",
+        "options": {}
+      },
+      "id": "63a16ae9-a218-465a-8095-2c65cab57236",
+      "name": "Request Final Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4080,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "o1-teste_memory",
+        "messageData": "={{ JSON.stringify($json) }}",
+        "tail": true
+      },
+      "id": "14c91d11-4288-4faf-a27d-e524f7689b2c",
+      "name": "Push User Final Answer message",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4300,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "o1-teste_memory",
+        "options": {}
+      },
+      "id": "b7582c1d-cc71-49d3-8f22-3baa5efe1fed",
+      "name": "Get final messages",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4520,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a10706be-8775-4c6e-b228-2e8fd48e819d",
+              "name": "messages",
+              "value": "={{ $json.messages.map(obj => JSON.parse(obj)) }}",
+              "type": "array"
+            },
+            {
+              "id": "18589abd-12f2-4076-bac7-df79cbce4e31",
+              "name": "model",
+              "value": "gpt-4o-mini",
+              "type": "string"
+            },
+            {
+              "id": "cbdb253c-f517-4ff2-8493-6a114c25b8e0",
+              "name": "temperature",
+              "value": 0.2,
+              "type": "number"
+            },
+            {
+              "id": "8d412209-0ec6-4aa2-8244-6884d3a4f9b8",
+              "name": "max_tokens",
+              "value": 300,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "89e132ae-e020-4a49-a196-9c542fa83717",
+      "name": "Final Request Body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4740,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "1de38bea-a459-422e-b4fc-f03006d98532",
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4960,
+        440
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9Yk60HcVSVgLxdSJ",
+          "name": "OpenAI Header Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "o1-teste_memory"
+      },
+      "id": "b03ee73f-64e4-4158-b70f-b51b8f9ca6f7",
+      "name": "Reset memory",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        5380,
+        440
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "b1f0094a-8075-4c68-8b96-30a946917352",
+                    "leftValue": "={{ $('Parse').item.json.next_action }}",
+                    "rightValue": "final_answer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "final_answer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Parse').item.json.next_action }}",
+                    "rightValue": "continue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "continue"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ef133762-8cdd-4273-9cb6-2564fa10c5b1",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        3800,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fe20626-017d-4655-8676-65f4217cda3c",
+              "name": "answer",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd2aa063-ec88-4be6-9852-a5fa47149478",
+      "name": "Answer",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5180,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Fluxo que simula o gpt-o1, pensa em steps e da uma resposta final.\n**Sem memória por enquanto.",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "3052a67d-6935-46a6-bdb8-1f98e5d8beb8",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        360,
+        600
+      ],
+      "webhookId": "ef2003d0-2974-4750-be57-e1e2f3bfe918"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "responseFormat": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "model": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get messages": {
+      "main": [
+        [
+          {
+            "node": "messages",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "responseFormat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System message": {
+      "main": [
+        [
+          {
+            "node": "Push Assistant message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User message": {
+      "main": [
+        [
+          {
+            "node": "System message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push User message": {
+      "main": [
+        [
+          {
+            "node": "Assistant Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chatInput": {
+      "main": [
+        [
+          {
+            "node": "User message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "messages": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Assistant message": {
+      "main": [
+        [
+          {
+            "node": "Push User message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistant Message": {
+      "main": [
+        [
+          {
+            "node": "Push Assistant message 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Assistant message 2": {
+      "main": [
+        [
+          {
+            "node": "Get messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse": {
+      "main": [
+        [
+          {
+            "node": "Assistant Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assistant Step": {
+      "main": [
+        [
+          {
+            "node": "Push Assistant Step message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Assistant Step message": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Request Final Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Final Answer": {
+      "main": [
+        [
+          {
+            "node": "Push User Final Answer message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push User Final Answer message": {
+      "main": [
+        [
+          {
+            "node": "Get final messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get final messages": {
+      "main": [
+        [
+          {
+            "node": "Final Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Request Body": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Request Final Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer": {
+      "main": [
+        [
+          {
+            "node": "Reset memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "chatInput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8f4b43fe-fdb0-42cc-937a-e82e08bd9b3d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ad20c637f548d7b1e09cbae0383c6644aca87b4f0fe8deda2de937f77c2be79"
+  },
+  "id": "QQsupFOx7VS3JJuc",
+  "tags": []
+}

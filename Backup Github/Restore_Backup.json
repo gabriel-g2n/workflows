@@ -1,0 +1,190 @@
+{
+  "name": "Restore Backup",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "569b9057-5cb8-43f6-a778-93fd24e70be2",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        820,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "={{ $json.dono }}",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "={{ $json.repositorio }}",
+          "mode": "name"
+        },
+        "filePath": "={{ $json.arquirvo }}",
+        "additionalParameters": {
+          "reference": "={{ $json.versao }}"
+        }
+      },
+      "id": "21def428-1ba2-4d66-aaff-839422f8478d",
+      "name": "GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        380
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "cK5zPCTIu4VbpDUE",
+          "name": "GitHub account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "257d9d98-46f8-4a43-baee-cb9949f1a53d",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "workflowId": {
+          "__rl": true,
+          "value": "={{ $json.data.id }}",
+          "mode": "id"
+        },
+        "workflowObject": "={{ JSON.stringify($json.data) }}",
+        "requestOptions": {}
+      },
+      "id": "1ef3b415-486a-4cfb-b849-c5df349df99d",
+      "name": "n8n",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        380
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "0Owhw6MuBsjylAFE",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "200d0b65-a68f-47d6-b6ea-1df49f417ecc",
+              "name": "arquirvo",
+              "value": "cliente-x/0m5NWU4NvuUfff2I.json",
+              "type": "string"
+            },
+            {
+              "id": "0cf92acd-3e55-4618-881e-97c2c60db6bc",
+              "name": "dono",
+              "value": "gabriel-g2n",
+              "type": "string"
+            },
+            {
+              "id": "257bb5a0-e186-44a5-a21a-fcd751f9f567",
+              "name": "repositorio",
+              "value": "n8n-backup-youtube",
+              "type": "string"
+            },
+            {
+              "id": "5ceff380-1ffb-4e87-afff-b296d8a92637",
+              "name": "versao",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0291a08f-8d04-4b22-b249-72cc95df747f",
+      "name": "Info Basica",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        380
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Info Basica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "n8n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Info Basica": {
+      "main": [
+        [
+          {
+            "node": "GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "04182085-e8f2-4b52-b452-264216cd5519",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ad20c637f548d7b1e09cbae0383c6644aca87b4f0fe8deda2de937f77c2be79"
+  },
+  "id": "BahQJuBUAZcTktct",
+  "tags": []
+}

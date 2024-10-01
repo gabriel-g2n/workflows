@@ -1,0 +1,433 @@
+{
+  "name": "Buffer Youtube",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f16b1bf-1a3e-4029-8d7a-1bccb919ee43",
+              "name": "message.message_id",
+              "value": "={{ $('input evolution').item.json.body.data.key.id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "11800d83-ecca-4f9c-a878-a2419db0c8e9",
+              "name": "message.chat_id",
+              "value": "={{ $('input evolution').item.json.body.data.key.remoteJid || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c33f9527-e661-49e5-8e5e-64f3b430928a",
+              "name": "message.content_type",
+              "value": "={{ $('input evolution').item.json.body.data.message.extendedTextMessage ? 'text' : '' }}{{ $('input evolution').item.json.body.data.message.conversation ? 'text' : '' }}{{ $('input evolution').item.json.body.data.message.audioMessage ? 'audio' : '' }}{{ $('input evolution').item.json.body.data.message.imageMessage ? 'image' : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "06eba1c9-cff0-4f68-b6da-6bb0092466b7",
+              "name": "message.content",
+              "value": "={{ $('input evolution').item.json.body.data.message.extendedTextMessage?.text || '' }}{{ $('input evolution').item.json.body.data.message.imageMessage?.caption || '' }}{{ $('input evolution').item.json.body.data.message.conversation || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b97f1af3-5361-46fc-9303-d644921231d8",
+              "name": "message.timestamp",
+              "value": "={{ $('input evolution').item.json.body.data.messageTimestamp.toDateTime('s').toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "dc3dc59c-90a3-4a45-bea2-de092c91083b",
+              "name": "message.content_url",
+              "value": "={{ $('input evolution').item.json.body.data.message.audioMessage?.url || '' }}{{ $('input evolution').item.json.body.data.message.imageMessage?.url || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "8b01a818-a456-476e-bace-adefe2f04eb4",
+              "name": "message.event",
+              "value": "={{ $('input evolution').item.json.body.data.key.fromMe ? 'outcoming' : 'incoming' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "43ae0a36-0791-4c60-8184-c7a2ccb6cd40",
+      "name": "normalizacao",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "messages",
+        "key": "={{ $('normalizacao').item.json.message.chat_id }}",
+        "options": {}
+      },
+      "id": "27db8e02-c7fd-4363-8d88-dd2c2e3cc6f2",
+      "name": "get messages buffer",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.message.chat_id }}",
+        "messageData": "={{ JSON.stringify($json.message) }}",
+        "tail": true
+      },
+      "id": "ad6aee45-406e-443c-ac5d-a0d789508902",
+      "name": "push message buffer",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "id": "028b3a34-df8a-4c2f-8584-e30fa76bb9eb",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2060,
+        580
+      ],
+      "webhookId": "ac13eb12-ea29-4507-9539-ea41f8091b8f"
+    },
+    {
+      "parameters": {},
+      "id": "8d1dc76c-d880-4d5a-8686-237f4aa789f6",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "path": "806296e4-2509-4e37-b2ec-679445050d63",
+        "options": {}
+      },
+      "id": "46af8ba8-a4bd-45d8-8930-d520bdb371dd",
+      "name": "input evolution",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        820,
+        400
+      ],
+      "webhookId": "806296e4-2509-4e37-b2ec-679445050d63"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db5cfe0a-7f43-4a61-8b27-bfd3a95deb8d",
+              "name": "messages",
+              "value": "={{ $json.messages.map(value => JSON.parse(value).content).join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "232b0055-4735-422f-85c5-dabfa4e9af61",
+      "name": "messages",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('normalizacao').item.json.message.chat_id }}"
+      },
+      "id": "d0780fa2-f302-406a-b767-241d109fc6ae",
+      "name": "delete buffer",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "ccEEcPDqUplE95d3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ JSON.parse($json.messages.first()).message_id }}",
+                    "rightValue": "={{ $('normalizacao').item.json.message.message_id }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nada a fazer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "fdd1e894-df1c-4ebd-8f56-82f66dad03be",
+                    "leftValue": "={{ JSON.parse($json.messages.last()).timestamp }}",
+                    "rightValue": "={{ $now.minus(15, 'seconds') }}",
+                    "operator": {
+                      "type": "dateTime",
+                      "operation": "before"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "prosseguir"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "esperar"
+        }
+      },
+      "id": "674d34b8-04d6-4e8b-ab3b-1498dce54448",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1700,
+        400
+      ]
+    }
+  ],
+  "pinData": {
+    "input evolution": [
+      {
+        "json": {
+          "headers": {
+            "host": "applications-n8n-webhook.hzwlsv.easypanel.host",
+            "user-agent": "axios/1.7.4",
+            "content-length": "1198",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "applications-n8n-webhook.hzwlsv.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d57e35ed6adc",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "G2N Bots",
+            "data": {
+              "key": {
+                "remoteJid": "554488581702@s.whatsapp.net",
+                "fromMe": false,
+                "id": "0709C2B34C587C1958784494B03440AF"
+              },
+              "pushName": "Gabriel Costa",
+              "message": {
+                "extendedTextMessage": {
+                  "text": "??",
+                  "previewType": "NONE",
+                  "contextInfo": {
+                    "entryPointConversionSource": "non_contact",
+                    "entryPointConversionApp": "whatsapp",
+                    "entryPointConversionDelaySeconds": 78
+                  },
+                  "inviteLinkGroupTypeV2": "DEFAULT"
+                },
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "e6Yg630KyFn3tw==",
+                    "senderTimestamp": "1723836411",
+                    "recipientKeyHash": "HlmWQ54OZFS0bw==",
+                    "recipientTimestamp": "1724096538"
+                  },
+                  "deviceListMetadataVersion": 2
+                }
+              },
+              "contextInfo": {
+                "entryPointConversionSource": "non_contact",
+                "entryPointConversionApp": "whatsapp",
+                "entryPointConversionDelaySeconds": 78
+              },
+              "messageType": "extendedTextMessage",
+              "messageTimestamp": 1724096691,
+              "instanceId": "d6edbbd9-5f9e-4ccb-adcf-1bfb2547f4b0",
+              "source": "android"
+            },
+            "destination": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/g2n-bots",
+            "date_time": "2024-08-19T16:44:51.731Z",
+            "sender": "554498600061@s.whatsapp.net",
+            "server_url": "https://applications-evolution-01.hzwlsv.easypanel.host",
+            "apikey": "384ACF60B6AA-4AF2-9A17-2702B98CCFA3"
+          },
+          "webhookUrl": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/g2n-bots",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "normalizacao": {
+      "main": [
+        [
+          {
+            "node": "push message buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "push message buffer": {
+      "main": [
+        [
+          {
+            "node": "get messages buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get messages buffer": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "get messages buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "input evolution": {
+      "main": [
+        [
+          {
+            "node": "normalizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete buffer": {
+      "main": [
+        [
+          {
+            "node": "messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delete buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "59b07742-5675-4faf-ab51-1e0f9be9b78d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ad20c637f548d7b1e09cbae0383c6644aca87b4f0fe8deda2de937f77c2be79"
+  },
+  "id": "smuE7a1jxgJO5yTJ",
+  "tags": []
+}

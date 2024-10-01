@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:  
+  litellm:
+    image: ghcr.io/berriai/litellm:main-v1.48.2
+    environment:
+      - DATABASE_URL=postgres://postgres:[SENHA_POSTGRES]@postgres:5432/litellm
+      - STORE_MODEL_IN_DB=True
+      - LITELLM_DROP_PARAMS=True
+      - LITELLM_MASTER_KEY=sk-...
+      - UI_USERNAME=llm
+      - UI_PASSWORD=llm
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+          constraints:
+            - node.role == manager
+      resources:
+          limits:
+            cpus: '0.5'
+            memory: 512M
+      labels:
+          - traefik.enable=true
+          #SSL
+          - traefik.http.routers.litellm.rule=Host(`litellm.g2ngroup.com`)
+          - traefik.http.services.litellm.loadbalancer.server.port=4000
+          - traefik.http.routers.litellm.service=litellm
+          - traefik.http.routers.litellm.tls.certresolver=le
+          - traefik.http.routers.litellm.entrypoints=websecure
+          - traefik.http.routers.litellm.tls=true
+    networks:
+        - traefik_public
+        - app_network
+
+networks:
+  traefik_public:
+    external: true
+  app_network:
+    external: true

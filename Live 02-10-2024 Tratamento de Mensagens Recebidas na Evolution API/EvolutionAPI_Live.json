@@ -1,0 +1,706 @@
+{
+  "name": "EvolutionAPI Live",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a88cacc3-970b-44f1-b381-d74ec724fb1e",
+      "name": "MENSAGEM DE TEXTO",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2eb4085c-e5d5-4b0b-9d32-79c9e0a88a62",
+      "name": "IMAGEM SEM LEGENDA",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2e5084dc-889d-4c74-8012-72ac9b24bb66",
+      "name": "IMAGEM COM LEGENDA",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evolution-live",
+        "options": {}
+      },
+      "id": "57341b5a-318c-4210-8888-f6621f6a3c27",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        480,
+        460
+      ],
+      "webhookId": "c8963ab5-6995-48a3-bdc6-ff5e411fdc09"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e42874ed-46eb-4add-8e38-9d6c1126b508",
+      "name": "AUDIO",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f16b1bf-1a3e-4029-8d7a-1bccb919ee43",
+              "name": "message.message_id",
+              "value": "={{ $json.body?.data?.key?.id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "11800d83-ecca-4f9c-a878-a2419db0c8e9",
+              "name": "message.chat_id",
+              "value": "={{ $json.body.data.key.remoteJid || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c33f9527-e661-49e5-8e5e-64f3b430928a",
+              "name": "message.content_type",
+              "value": "={{ $json.body.data.message.extendedTextMessage ? 'text' : '' }}{{ $json.body.data.message.conversation ? 'text' : '' }}{{ $json.body.data.message.audioMessage ? 'audio' : '' }}{{ $json.body.data.message.imageMessage ? 'image' : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "06eba1c9-cff0-4f68-b6da-6bb0092466b7",
+              "name": "message.content",
+              "value": "={{ $json.body.data.message.extendedTextMessage?.text || '' }}{{ $json.body.data.message.imageMessage?.caption || '' }}{{ $json.body.data.message.conversation || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b97f1af3-5361-46fc-9303-d644921231d8",
+              "name": "message.timestamp",
+              "value": "={{ $json.body.data.messageTimestamp.toDateTime('s').toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "dc3dc59c-90a3-4a45-bea2-de092c91083b",
+              "name": "message.content_url",
+              "value": "={{ $json.body.data.message.audioMessage?.url || '' }}{{ $json.body.data.message.imageMessage?.url || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "8b01a818-a456-476e-bace-adefe2f04eb4",
+              "name": "message.event",
+              "value": "={{ $json.body.data.key.fromMe ? 'outcoming' : 'incoming' }}",
+              "type": "string"
+            },
+            {
+              "id": "b2f1f6b5-292f-4695-9e41-be200c6d7053",
+              "name": "instance.name",
+              "value": "={{ $json.body.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "572fcce5-8a26-4e8f-a48a-ef0bee569dcd",
+              "name": "instance.apikey",
+              "value": "={{ $json.body.apikey }}",
+              "type": "string"
+            },
+            {
+              "id": "e90043db-657b-461c-b040-2d6089abfbdb",
+              "name": "instance.server_url",
+              "value": "={{ $json.body.server_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eb3b97f5-cdac-43f5-82b7-e87cdf98d292",
+      "name": "normalizacao",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('normalizacao').item.json.instance.server_url }}/chat/getBase64FromMediaMessage/{{ $('normalizacao').item.json.instance.name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('normalizacao').item.json.instance.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message.key.id",
+              "value": "={{ $json.message.message_id }}"
+            },
+            {
+              "name": "convertToMp4",
+              "value": "={{ Boolean(false) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "57eacc0c-0c1c-4152-a732-f5795ad704eb",
+      "name": "Get audio base64 EvolutionAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1700,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content_type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "a1dfeee8-7927-4419-b091-e5b1930c011e",
+                    "leftValue": "={{ $json.message.content_type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "ab4d4cfb-b90f-4fda-96e2-9397e0fbd4c2",
+                    "leftValue": "={{ $json.message.content_type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "other"
+        }
+      },
+      "id": "76ea90cb-25fc-4847-ac6d-775500ab5b45",
+      "name": "Switch Content Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1380,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "fileName": "imagem",
+          "mimeType": "={{ $json.mimetype }}"
+        }
+      },
+      "id": "d6c3c596-fa3c-4012-8a72-131346127cef",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        740
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "inputType": "base64",
+        "options": {}
+      },
+      "id": "e2518570-4f7b-41ff-8b83-061e221ab1f1",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [
+        2120,
+        740
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "EwQcFaVNnvQlPhPk",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Alguns tipos de mensagens\n",
+        "height": 894.6046511627903,
+        "width": 265.88372093023236
+      },
+      "id": "c3bf99df-6ecb-4da3-9ef3-850c2a50e4eb",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Audio para texto\n",
+        "height": 336.2558139534884,
+        "width": 672.6279069767438
+      },
+      "id": "37dff657-a2d7-4b2b-8385-df46697e5074",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        600
+      ]
+    }
+  ],
+  "pinData": {
+    "MENSAGEM DE TEXTO": [
+      {
+        "json": {
+          "headers": {
+            "host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "user-agent": "axios/1.6.7",
+            "content-length": "920",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d57e35ed6adc",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "Guto Bot",
+            "data": {
+              "key": {
+                "remoteJid": "554488581702@s.whatsapp.net",
+                "fromMe": false,
+                "id": "3AE08C5473A51DC3BE13"
+              },
+              "pushName": "Gabriel Costa",
+              "message": {
+                "conversation": "MENSAGEM DE TEXTO",
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "UhZcO5WXFcFggQ==",
+                    "senderTimestamp": "1726696358",
+                    "recipientKeyHash": "E/D9jrPfGn2rEA==",
+                    "recipientTimestamp": "1727136227"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "6lUPAuCQuy+dI4c7+6npkHe/RzNxZLoVhjwnYy1Im4s="
+                }
+              },
+              "messageType": "conversation",
+              "messageTimestamp": 1727912544,
+              "instanceId": "3451597b-7332-4b26-973d-9078af3ad9d6",
+              "source": "ios"
+            },
+            "destination": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/evolution/router",
+            "date_time": "2024-10-02T20:42:24.188Z",
+            "sender": "554498600066@s.whatsapp.net",
+            "server_url": "https://applications-evolution-01.hzwlsv.easypanel.host",
+            "apikey": "FDF95E3733C6-436E-9B0E-1BFAC2BA4319"
+          },
+          "webhookUrl": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook-test/evolution-live",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "IMAGEM SEM LEGENDA": [
+      {
+        "json": {
+          "headers": {
+            "host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "user-agent": "axios/1.6.7",
+            "content-length": "3066",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d57e35ed6adc",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "Guto Bot",
+            "data": {
+              "key": {
+                "remoteJid": "554488581702@s.whatsapp.net",
+                "fromMe": false,
+                "id": "3A6675C1053EAB415DE8"
+              },
+              "pushName": "Gabriel Costa",
+              "message": {
+                "imageMessage": {
+                  "url": "https://mmg.whatsapp.net/v/t62.7118-24/12441748_1278835919956676_970704609290929687_n.enc?ccb=11-4&oh=01_Q5AaIN9oBao38-7y0NtrlSvtlvBKMNKAZ4GrOEWnPZhnu8Cf&oe=672553C0&_nc_sid=5e03e0&mms3=true",
+                  "mimetype": "image/jpeg",
+                  "fileSha256": "DIeYwLaeMETv20wKycLu0KAMrVVAqJIFGNggEykGqCA=",
+                  "fileLength": "43832",
+                  "height": 735,
+                  "width": 1280,
+                  "mediaKey": "pBkD3dwgRJOckmB8oJ8Y8wUPUhP0qS2HQWbyvUwSTHw=",
+                  "fileEncSha256": "vHVkAfFKYagBYpblA6dErOxzosl0KbPKsXbKeJp/O0o=",
+                  "directPath": "/v/t62.7118-24/12441748_1278835919956676_970704609290929687_n.enc?ccb=11-4&oh=01_Q5AaIN9oBao38-7y0NtrlSvtlvBKMNKAZ4GrOEWnPZhnu8Cf&oe=672553C0&_nc_sid=5e03e0",
+                  "mediaKeyTimestamp": "1727912661",
+                  "jpegThumbnail": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wgARCABIAEgDASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAIBBQME/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAH/2gAMAwEAAhADEAAAAPPebh0HPHQc+j7nPHQc8Ru6RoaqzwaDBSdDNGVJ7TApQ8gAFUvmEpI7YALoXyCAf//EABQRAQAAAAAAAAAAAAAAAAAAAED/2gAIAQIBAT8AT//EABgRAAIDAAAAAAAAAAAAAAAAAAERECBA/9oACAEDAQE/AMKNWZ//xAApEAABAwIDCAMBAQAAAAAAAAABAAIDERIEFWEFEBYgITFRUyJBcRMw/9oACAEBAAE/AG7cxhNPiEdtYwMuuZ+LPcb4as9xvhqz3G+GrPcb4as9xvhqz3G+GrPcb4anS3HsFfor9Ffor0Xtp0HVX6K/RX6cpaQKkd0Gkiv1yFpDrU+Ms7q3pXc9zTGAK3BNkZ/K11a/VFTeXVNU55d3VelNxBA3QlpBDnBupUgaHG1wKewNA61ryBF1RTeFK+4D4hv5/iXV5WRukNGNJOidDIwVcwgcnD0nsXD0nsXD0nsXD0nsUWxJ4XXRy0Kk2PiZG2unqFw9J7Fw9J7Fw9J7F//+AAMA/9k=",
+                  "firstScanSidecar": "Wh7q59pGetjrvA==",
+                  "firstScanLength": 4676,
+                  "scansSidecar": "Wh7q59pGetjrvJe5wCBKu6gcsTIyWVOCsNf4UdlNC2uVR8KZmw9bvw==",
+                  "scanLengths": [
+                    4676,
+                    16697,
+                    7740,
+                    14717
+                  ]
+                },
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "UhZcO5WXFcFggQ==",
+                    "senderTimestamp": "1726696358",
+                    "recipientKeyHash": "E/D9jrPfGn2rEA==",
+                    "recipientTimestamp": "1727136227"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "oeDlDgFixZ+UfDedrwInXc8NGxhev3EFW36PPSLtrSQ="
+                },
+                "mediaUrl": "https://databases-minio.hzwlsv.easypanel.host/evolution-01/evolution-api/3451597b-7332-4b26-973d-9078af3ad9d6/554488581702%40s.whatsapp.net/imageMessage/3A6675C1053EAB415DE8.jpeg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OaBCHYCxI0fRaFYA2uop%2F20241002%2Feu-west-3%2Fs3%2Faws4_request&X-Amz-Date=20241002T234553Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=61779722798b3e0cda008a4b24ea348433c2edd0883851a6cc299980320a69ad"
+              },
+              "contextInfo": null,
+              "messageType": "imageMessage",
+              "messageTimestamp": 1727912753,
+              "instanceId": "3451597b-7332-4b26-973d-9078af3ad9d6",
+              "source": "ios"
+            },
+            "destination": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/evolution/router",
+            "date_time": "2024-10-02T20:45:53.171Z",
+            "sender": "554498600066@s.whatsapp.net",
+            "server_url": "https://applications-evolution-01.hzwlsv.easypanel.host",
+            "apikey": "FDF95E3733C6-436E-9B0E-1BFAC2BA4319"
+          },
+          "webhookUrl": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook-test/evolution-live",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "IMAGEM COM LEGENDA": [
+      {
+        "json": {
+          "headers": {
+            "host": "applications-n8n-webhook.hzwlsv.easypanel.host",
+            "user-agent": "axios/1.6.7",
+            "content-length": "3086",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "applications-n8n-webhook.hzwlsv.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d57e35ed6adc",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "Guto Bot",
+            "data": {
+              "key": {
+                "remoteJid": "554488581702@s.whatsapp.net",
+                "fromMe": false,
+                "id": "3A9BD5F156B2766FD029"
+              },
+              "pushName": "Gabriel Costa",
+              "message": {
+                "imageMessage": {
+                  "url": "https://mmg.whatsapp.net/v/t62.7118-24/12441748_1278835919956676_970704609290929687_n.enc?ccb=11-4&oh=01_Q5AaIN9oBao38-7y0NtrlSvtlvBKMNKAZ4GrOEWnPZhnu8Cf&oe=672553C0&_nc_sid=5e03e0&mms3=true",
+                  "mimetype": "image/jpeg",
+                  "caption": "LEGENDA",
+                  "fileSha256": "DIeYwLaeMETv20wKycLu0KAMrVVAqJIFGNggEykGqCA=",
+                  "fileLength": "43832",
+                  "height": 735,
+                  "width": 1280,
+                  "mediaKey": "pBkD3dwgRJOckmB8oJ8Y8wUPUhP0qS2HQWbyvUwSTHw=",
+                  "fileEncSha256": "vHVkAfFKYagBYpblA6dErOxzosl0KbPKsXbKeJp/O0o=",
+                  "directPath": "/v/t62.7118-24/12441748_1278835919956676_970704609290929687_n.enc?ccb=11-4&oh=01_Q5AaIN9oBao38-7y0NtrlSvtlvBKMNKAZ4GrOEWnPZhnu8Cf&oe=672553C0&_nc_sid=5e03e0",
+                  "mediaKeyTimestamp": "1727912661",
+                  "jpegThumbnail": "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABsSFBcUERsXFhceHBsgKEIrKCUlKFE6PTBCYFVlZF9VXVtqeJmBanGQc1tdhbWGkJ6jq62rZ4C8ybqmx5moq6T/2wBDARweHigjKE4rK06kbl1upKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKT/wgARCABIAEgDASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAIBBQME/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAH/2gAMAwEAAhADEAAAAPPebh0HPHQc+j7nPHQc8Ru6RoaqzwaDBSdDNGVJ7TApQ8gAFUvmEpI7YALoXyCAf//EABQRAQAAAAAAAAAAAAAAAAAAAED/2gAIAQIBAT8AT//EABgRAAIDAAAAAAAAAAAAAAAAAAERECBA/9oACAEDAQE/AMKNWZ//xAApEAABAwIDCAMBAQAAAAAAAAABAAIDERIEFWEFEBYgITFRUyJBcRMw/9oACAEBAAE/AG7cxhNPiEdtYwMuuZ+LPcb4as9xvhqz3G+GrPcb4as9xvhqz3G+GrPcb4anS3HsFfor9Ffor0Xtp0HVX6K/RX6cpaQKkd0Gkiv1yFpDrU+Ms7q3pXc9zTGAK3BNkZ/K11a/VFTeXVNU55d3VelNxBA3QlpBDnBupUgaHG1wKewNA61ryBF1RTeFK+4D4hv5/iXV5WRukNGNJOidDIwVcwgcnD0nsXD0nsXD0nsXD0nsUWxJ4XXRy0Kk2PiZG2unqFw9J7Fw9J7Fw9J7F//+AAMA/9k=",
+                  "firstScanSidecar": "Wh7q59pGetjrvA==",
+                  "firstScanLength": 4676,
+                  "scansSidecar": "Wh7q59pGetjrvJe5wCBKu6gcsTIyWVOCsNf4UdlNC2uVR8KZmw9bvw==",
+                  "scanLengths": [
+                    4676,
+                    16697,
+                    7740,
+                    14717
+                  ]
+                },
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "UhZcO5WXFcFggQ==",
+                    "senderTimestamp": "1726696358",
+                    "recipientKeyHash": "E/D9jrPfGn2rEA==",
+                    "recipientTimestamp": "1727136227"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "U3i0DK09fkawLTeMxEZzQYmYfJi9eJ2TE2tVyqPWtwY="
+                },
+                "mediaUrl": "https://databases-minio.hzwlsv.easypanel.host/evolution-01/evolution-api/3451597b-7332-4b26-973d-9078af3ad9d6/554488581702%40s.whatsapp.net/imageMessage/3A9BD5F156B2766FD029.jpeg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OaBCHYCxI0fRaFYA2uop%2F20241002%2Feu-west-3%2Fs3%2Faws4_request&X-Amz-Date=20241002T234706Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=7629e957e61b9e372caa2b1c64b551c06aa7b7294a3e3e79cede21a51f2dd399"
+              },
+              "contextInfo": null,
+              "messageType": "imageMessage",
+              "messageTimestamp": 1727912826,
+              "instanceId": "3451597b-7332-4b26-973d-9078af3ad9d6",
+              "source": "ios"
+            },
+            "destination": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/evolution/router",
+            "date_time": "2024-10-02T20:47:06.137Z",
+            "sender": "554498600066@s.whatsapp.net",
+            "server_url": "https://applications-evolution-01.hzwlsv.easypanel.host",
+            "apikey": "FDF95E3733C6-436E-9B0E-1BFAC2BA4319"
+          },
+          "webhookUrl": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/evolution-live",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "AUDIO": [
+      {
+        "json": {
+          "headers": {
+            "host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "user-agent": "axios/1.6.7",
+            "content-length": "2185",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "172.18.0.1",
+            "x-forwarded-host": "applications-n8n-editor.hzwlsv.easypanel.host",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d57e35ed6adc",
+            "x-real-ip": "172.18.0.1"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "Guto Bot",
+            "data": {
+              "key": {
+                "remoteJid": "554488581702@s.whatsapp.net",
+                "fromMe": false,
+                "id": "3AAB25EE1C6D0D08CD93"
+              },
+              "pushName": "Gabriel Costa",
+              "message": {
+                "audioMessage": {
+                  "url": "https://mmg.whatsapp.net/v/t62.7117-24/31825364_954974049980888_2418381174862333264_n.enc?ccb=11-4&oh=01_Q5AaIEJI7JN6h8pd-U0So_UUP8n2Fjbaj1zc5v55fyTD_CFU&oe=67253593&_nc_sid=5e03e0&mms3=true",
+                  "mimetype": "audio/ogg; codecs=opus",
+                  "fileSha256": "wGAdWcf5Zjl+F4kM37GHMkQx0Jf49dbcSSWX+WzUPM4=",
+                  "fileLength": "6380",
+                  "seconds": 3,
+                  "ptt": true,
+                  "mediaKey": "iBy2r7yMjiSWD9P4a1uS1rEun7WaNpYp/EbvgaJ/Ojc=",
+                  "fileEncSha256": "5HFisay9B+kGeI1tABEZ1+rrvqU2Kr/QMZ27EkMfZnI=",
+                  "directPath": "/v/t62.7117-24/31825364_954974049980888_2418381174862333264_n.enc?ccb=11-4&oh=01_Q5AaIEJI7JN6h8pd-U0So_UUP8n2Fjbaj1zc5v55fyTD_CFU&oe=67253593&_nc_sid=5e03e0",
+                  "mediaKeyTimestamp": "1727912861",
+                  "streamingSidecar": "ovzV9+rsCASgBw==",
+                  "waveform": "AAAAAAAAAAAAAAAAAAAAAgQFBgYJCw0MCwoIBgUEBAMBAQcNDwwJCAgIBwYFBQQDAgEDBwoJBwUEAgIDBAQDAg=="
+                },
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyHash": "UhZcO5WXFcFggQ==",
+                    "senderTimestamp": "1726696358",
+                    "recipientKeyHash": "E/D9jrPfGn2rEA==",
+                    "recipientTimestamp": "1727136227"
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": "ljBBOY5spWVvZZGbnbL9d7iJ7up+ggxGsKkd2Qh8zn4="
+                },
+                "mediaUrl": "https://databases-minio.hzwlsv.easypanel.host/evolution-01/evolution-api/3451597b-7332-4b26-973d-9078af3ad9d6/554488581702%40s.whatsapp.net/audioMessage/3AAB25EE1C6D0D08CD93.oga?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=OaBCHYCxI0fRaFYA2uop%2F20241002%2Feu-west-3%2Fs3%2Faws4_request&X-Amz-Date=20241002T234746Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=9fe6bfe1dc45325107e44c62c0217e25d84d47d8dd43aab2f90a04cbef2b022c"
+              },
+              "contextInfo": null,
+              "messageType": "audioMessage",
+              "messageTimestamp": 1727912866,
+              "instanceId": "3451597b-7332-4b26-973d-9078af3ad9d6",
+              "source": "ios"
+            },
+            "destination": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook/evolution/router",
+            "date_time": "2024-10-02T20:47:46.224Z",
+            "sender": "554498600066@s.whatsapp.net",
+            "server_url": "https://applications-evolution-01.hzwlsv.easypanel.host",
+            "apikey": "FDF95E3733C6-436E-9B0E-1BFAC2BA4319"
+          },
+          "webhookUrl": "https://applications-n8n-webhook.hzwlsv.easypanel.host/webhook-test/evolution-live",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "normalizacao": {
+      "main": [
+        [
+          {
+            "node": "Switch Content Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IMAGEM COM LEGENDA": {
+      "main": [
+        [
+          {
+            "node": "normalizacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get audio base64 EvolutionAPI": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "08975c92-b09a-4dcc-94f6-8d607a6b8cd2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2ad20c637f548d7b1e09cbae0383c6644aca87b4f0fe8deda2de937f77c2be79"
+  },
+  "id": "lLJPWiYlBv6zE0nd",
+  "tags": []
+}

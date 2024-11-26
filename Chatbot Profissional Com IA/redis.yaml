@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes", "--port", "6379"]
+    networks:
+      - app_network
+    volumes:
+      - redis_data:/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  app_network:
+    external: true
+
+volumes:
+  redis_data:
+    external: true

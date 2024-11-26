@@ -1,0 +1,89 @@
+version: "3.8"
+
+services:
+  n8n_postgres:
+    image: postgres:15
+    command: [postgres, --max_connections=100]
+    environment:
+      - POSTGRES_PASSWORD=[SENHA_POSTGRES]
+    networks:
+      - app_network
+    volumes:
+      - n8n_postgres_data:/var/lib/postgresql/data
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+          
+  n8n_buffer:
+    image: n8nio/n8n:1.63.4
+    command: start
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_HOST: n8n_postgres
+      DB_POSTGRESDB_DATABASE: n8n_buffer
+      DB_POSTGRESDB_USER: postgres
+      DB_POSTGRESDB_PASSWORD: [SENHA_POSTGRES]
+      # criar chave https://acte.ltd/utils/randomkeygen
+      N8N_ENCRYPTION_KEY: [KEY_GERADA]
+      # hosts e URL
+      N8N_HOST: buffer.[SEU_DOMINIO]
+      N8N_EDITOR_BASE_URL: https://buffer.[SEU_DOMINIO]/
+      WEBHOOK_URL: https://buffer.[SEU_DOMINIO]/
+      N8N_PROTOCOL: https
+      NODE_ENV: production
+      # redis
+      QUEUE_BULL_REDIS_HOST: n8n_redis
+      QUEUE_BULL_REDIS_PORT: 6379
+      QUEUE_BULL_REDIS_DB: 2
+      # bibliotecas utilizadas
+      NODE_FUNCTION_ALLOW_EXTERNAL: moment,lodash,moment-with-locales
+      EXECUTIONS_DATA_PRUNE: 'true'
+      EXECUTIONS_DATA_MAX_AGE: 336
+      #timezone
+      GENERIC_TIMEZONE: America/Sao_Paulo
+      N8N_DEFAULT_LOCALE: pt-BR
+      #limpeza
+      # EXECUTIONS_DATA_PRUNE: 'true'
+      # EXECUTIONS_DATA_PRUNE_MAX_COUNT: 10
+      # EXECUTIONS_DATA_HARD_DELETE_BUFFER: 0.1
+      # EXECUTIONS_DATA_PRUNE_HARD_DELETE_INTERVAL: 1
+      # EXECUTIONS_DATA_PRUNE_SOFT_DELETE_INTERVAL: 1
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2048M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.n8n_buffer.rule=Host(`buffer.[SEU_DOMINIO]`)
+        - traefik.http.routers.n8n_buffer.service=n8n_buffer
+        - traefik.http.routers.n8n_buffer.entrypoints=websecure
+        - traefik.http.routers.n8n_buffer.tls.certresolver=le
+        - traefik.http.routers.n8n_buffer.tls=true
+        - traefik.http.services.n8n_buffer.loadbalancer.server.port=5678
+    networks:
+      - public_network
+      - app_network
+
+networks:
+  public_network:
+    external: true
+  app_network:
+    external: true
+
+volumes:
+  n8n_postgres_data:
+    external: true

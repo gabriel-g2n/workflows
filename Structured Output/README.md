@@ -1,6 +1,6 @@
 # Como Usar Structured Outputs da OpenAI no WhatsApp
 
-Este repositório contém os arquivos de um fluxo do **n8n** desenvolvido no vídeo [Como Usar Structured Outputs da OpenAI no WhatsApp: Enviando Respostas Humanizadas com ChatGPT!](LINK_DO_VIDEO), que ensina a configurar respostas humanizadas no WhatsApp utilizando ChatGPT da OpenAI e integrando com diversas ferramentas.
+Este repositório contém os arquivos de um fluxo do **n8n** desenvolvido no vídeo [Como Usar Structured Outputs da OpenAI no WhatsApp: Enviando Respostas Humanizadas com ChatGPT!](https://youtu.be/v4yHme-OQ-c), que ensina a configurar respostas humanizadas no WhatsApp utilizando ChatGPT da OpenAI e integrando com diversas ferramentas.
 
 ## Descrição
 
